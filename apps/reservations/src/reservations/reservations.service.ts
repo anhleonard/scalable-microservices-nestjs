@@ -20,7 +20,7 @@ export class ReservationsService {
     try {
       this.paymentsService
         .send('create_charge', {
-          ...createReservationDto?.charge,
+          amount: createReservationDto?.charge?.amount,
           email,
         })
         .subscribe(async (response) => {
@@ -31,7 +31,7 @@ export class ReservationsService {
             userId,
           });
 
-          console.log(reservation);
+          // console.log(reservation);
         });
     } catch (error) {
       throw new BadRequestException(error.message);

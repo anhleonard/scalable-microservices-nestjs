@@ -1,7 +1,10 @@
-import { IsEmail } from 'class-validator';
-import { CreateChargeDto } from './create-charge.dto';
+import { IsEmail, IsNotEmpty, IsNumber } from 'class-validator';
 
-export class PaymentChargeDto extends CreateChargeDto {
+export class PaymentChargeDto {
   @IsEmail()
   email: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  amount: number;
 }

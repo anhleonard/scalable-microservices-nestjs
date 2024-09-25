@@ -9,7 +9,6 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe());
   const configService = app.get(ConfigService);
-  console.log('run in port: ', configService.get('RV_PORT'));
   await app.listen(configService.get('RV_PORT'));
 }
 bootstrap();

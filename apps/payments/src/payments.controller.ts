@@ -9,6 +9,8 @@ export class PaymentsController {
 
   @MessagePattern('create_charge')
   async createCharge(@Payload() data: PaymentChargeDto) {
+    console.log('anh is the best');
+    console.log({ data });
     return await this.paymentsService.createCharge(data);
   }
 

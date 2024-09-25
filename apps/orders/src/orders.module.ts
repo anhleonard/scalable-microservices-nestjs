@@ -1,45 +1,58 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { ReservationsService } from './reservations.service';
-import { ReservationsController } from './reservations.controller';
+import { OrdersController } from './orders.controller';
+import { OrdersService } from './orders.service';
 import { DatabaseModule } from '@app/common/database/database.module';
-import { ReservationsRepository } from './reservation.repository';
-import {
-  ReservationDocument,
-  ReservationSchema,
-} from './models/reservation.schema';
+import { Order, OrderSchema } from './models/order.schema';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import {
   AUTH_SERVICE,
+  ORDER_SERVICE,
   PAYMENTS_SERVICE,
 } from '@app/common/constants/constants';
+import { OrdersRepository } from './orders.repository';
 
 @Module({
   imports: [
     forwardRef(() => DatabaseModule),
     DatabaseModule.forFeature([
-      { name: ReservationDocument.name, schema: ReservationSchema },
+      {
+        name: Order.name,
+        schema: OrderSchema,
+      },
     ]),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
-        MONGODB_URI: Joi.string().required(),
-        RV_PORT: Joi.number().required(),
-        AUTH_HOST: Joi.string().required(),
-        AUTH_PORT: Joi.number().required(),
-        PAYMENTS_HOST: Joi.string().required(),
-        PAYMENTS_PORT: Joi.number().required(),
+        ORDER_PORT: Joi.number().required(),
+        RABBITMQ_URI: Joi.string().required(),
       }),
     }),
     ClientsModule.registerAsync([
       {
         name: AUTH_SERVICE,
         useFactory: (configService: ConfigService) => ({
+          // transport: Transport.TCP,
+          // options: {
+          //   host: configService.get('AUTH_HOST'),
+          //   port: configService.get('AUTH_PORT'),
+          // },
           transport: Transport.RMQ,
           options: {
             urls: [configService.getOrThrow<string>('RABBITMQ_URI')],
             queue: 'auth',
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: ORDER_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.getOrThrow<string>('RABBITMQ_URI')],
+            queue: 'orders',
           },
         }),
         inject: [ConfigService],
@@ -57,7 +70,7 @@ import {
       },
     ]),
   ],
-  controllers: [ReservationsController],
-  providers: [ReservationsService, ReservationsRepository],
+  controllers: [OrdersController],
+  providers: [OrdersService, OrdersRepository],
 })
-export class ReservationsModule {}
+export class OrdersModule {}
